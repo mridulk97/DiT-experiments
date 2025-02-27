@@ -8,6 +8,8 @@
 A minimal training script for DiT using PyTorch DDP.
 """
 import torch
+import wandb
+import random
 # the first flag below was False when we tested this script but True makes A100 training a lot faster:
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
@@ -136,6 +138,7 @@ def main(args):
     else:
         logger = create_logger(None)
 
+    
     # Create model:
     assert args.image_size % 8 == 0, "Image size must be divisible by 8 (for the VAE encoder)."
     latent_size = args.image_size // 8
@@ -152,7 +155,18 @@ def main(args):
     logger.info(f"DiT Parameters: {sum(p.numel() for p in model.parameters()):,}")
 
     # Setup optimizer (we used default Adam betas=(0.9, 0.999) and a constant learning rate of 1e-4 in our paper):
-    opt = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=0)
+    lr = 1e-4
+    opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0)
+
+    run = wandb.init(# Set the project where this run will be logged
+    project="DiT_experiments",
+    # Track hyperparameters and run metadata
+    config={
+        "learning_rate": lr,
+        "epochs": args.epochs,
+    },
+)
+
 
     # Setup data:
     transform = transforms.Compose([
@@ -228,6 +242,7 @@ def main(args):
                 running_loss = 0
                 log_steps = 0
                 start_time = time()
+                wandb.log({"step": train_steps, "Train Loss": avg_loss, "Train Steps/Sec": steps_per_sec})
 
             # Save DiT checkpoint:
             if train_steps % args.ckpt_every == 0 and train_steps > 0:
