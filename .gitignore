@@ -1,0 +1,9 @@
+# Ignore Python cache directories
+__pycache__/
+diffusion/__pycache__/
+
+# Ignore results folder
+results/
+
+# Ignore wandb logs
+wandb/
