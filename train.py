@@ -164,6 +164,12 @@ def main(args):
     config={
         "learning_rate": lr,
         "epochs": args.epochs,
+        "vae": args.vae,
+        "global_seed": args.global_seed,
+        "global_batch_size": args.global_batch_size,
+        "num_classes": args.num_classes,
+        "image_size": args.image_size,
+        "model": args.model
     },
 )
 
